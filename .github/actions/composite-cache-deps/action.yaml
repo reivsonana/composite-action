@@ -5,22 +5,32 @@ inputs:
   node-version:
     description: "NodeJS version to use"
     required: true
-    default: "20.x"
+    default: 20.x
   working-dir:
     description: "The working directory of the application"
     required: false
-    default: "./"
+    default: .
 
 runs:
   using: composite
 
   steps: 
     name: Setup NodeJS version ${{ inputs.node-version }}
-    uses: 
+    uses: actions/setup-node@v3
+    with:
+      node-version: ${{ inputs.node-version }}
 
     name: Cache dependencies
-    uses: 
+    id: cache
+    uses: actions/cache@v3
+    with:
+      path: ${{ inputs.working-dir }}/node_modules
+      key: node-modules-${{  hashFiles('${{ inputs.working-dir }}/package-lock.json') }}
+
 
     name: Install dependencies
-    uses: 
+    if: steps.cache.outputs.cache-hit != 'true'
+    run: npm ci
+    shell: bash
+    working-directory: ${{ inputs.working-dir }}
   
